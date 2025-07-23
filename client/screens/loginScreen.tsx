@@ -1,8 +1,17 @@
 import React, { useState } from "react";
 import { StyleSheet, View, Text, TextInput, Pressable, Platform } from "react-native";
+import { sendOTP, verifyOTP } from '../authentication/auth';
 
 export default function LoginScreen() {
     const [phoneNumber, setPhoneNumber] = useState('');
+
+    const handleLogin = async () => {
+        try {
+            await sendOTP(phoneNumber);
+        } catch (error) {
+            console.error('Error sending OTP:', error);
+        }
+    };
 
     return (
         <View style={styles.container}>
@@ -16,7 +25,7 @@ export default function LoginScreen() {
                 placeholderTextColor="#DB9C9C80"
                 style={styles.textInput}
             />
-            <Pressable style={styles.button}>
+            <Pressable onPress={handleLogin} style={styles.button}>
                 <Text style={styles.buttonText}>sign up / sign in</Text>
             </Pressable>
         </View>
