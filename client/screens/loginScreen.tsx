@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { StyleSheet, View, Text, TextInput, Pressable, Platform } from "react-native";
+import { StyleSheet, View, Text, TextInput, Pressable, Platform, ViewStyle, StyleProp } from "react-native";
 import { sendOTP, verifyOTP } from '../authentication/auth';
 
 export default function LoginScreen() {
     const [phoneNumber, setPhoneNumber] = useState('');
 
-    const handleLogin = async () => {
+    const handleLogin = async (phoneNumber) => {
         try {
             await sendOTP(phoneNumber);
         } catch (error) {
@@ -25,7 +25,13 @@ export default function LoginScreen() {
                 placeholderTextColor="#DB9C9C80"
                 style={styles.textInput}
             />
-            <Pressable onPress={handleLogin} style={styles.button}>
+            <Pressable
+                onPress={() => handleLogin(phoneNumber)}
+                style={({ pressed }) => [
+                    styles.button,
+                    { transform: [{ scale: pressed ? 0.96 : 1 }, { translateY: pressed ? 2 : 0 }] }
+                ] as StyleProp<ViewStyle>}
+            >
                 <Text style={styles.buttonText}>sign up / sign in</Text>
             </Pressable>
         </View>
