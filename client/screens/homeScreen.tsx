@@ -4,7 +4,7 @@ import { StyleSheet, View, Text, Button } from "react-native";
 export default function HomeScreen() {
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>welcome, jesslyn!</Text>
+            <Text style={styles.title}>welcome, aaron!</Text>
             <Button title="sign up / sign in"></Button>
             <Text style={styles.subtitle}>ride now or schedule a ride below!</Text>
         </View>
