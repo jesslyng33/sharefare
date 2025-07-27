@@ -1,15 +1,29 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
 
-export default function SettingsScreen() {
+// Define the screens and route names
+const screens = [
+  { label: 'Account Management', route: 'Account' },
+  { label: 'Profile Visibility', route: 'Profile' },
+  { label: 'Notifications', route: 'Notifications' },
+  { label: 'Past Rides', route: 'PastRides' },
+  { label: 'Privacy and Data', route: 'Privacy' },
+  { label: 'Reports and Violations Center', route: 'Reports' },
+];
+
+export default function YouScreen() {
+  const navigation = useNavigation<StackNavigationProp<any>>();
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
       <ScrollView contentContainerStyle={styles.container}>
         {/* Profile Header */}
         <View style={styles.profileContainer}>
           <Image
-            source={require('../assets/jess.png')}
+            source={require('../assets/jess.png')} // Make sure this path is correct
             style={styles.avatar}
           />
           <TouchableOpacity style={styles.profileButton}>
@@ -20,16 +34,13 @@ export default function SettingsScreen() {
 
         {/* Settings List */}
         <View style={styles.settingsBox}>
-          {[
-            'Account Management',
-            'Profile Visibility',
-            'Notifications',
-            'Past Rides',
-            'Privacy and Data',
-            'Reports and Violations Center',
-          ].map((item, index) => (
-            <TouchableOpacity key={index} style={styles.settingItem}>
-              <Text style={styles.settingText}>{item}</Text>
+          {screens.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.settingItem}
+              onPress={() => navigation.navigate(item.route)}
+            >
+              <Text style={styles.settingText}>{item.label}</Text>
               <View style={styles.chevron} />
             </TouchableOpacity>
           ))}
@@ -102,7 +113,7 @@ const styles = StyleSheet.create({
     borderRightWidth: 2,
     borderBottomWidth: 2,
     borderColor: '#a88',
-    transform: [{ rotate: '-45deg' }], // right arrow
+    transform: [{ rotate: '-45deg' }],
     marginLeft: 10,
   },
   logoutButton: {
