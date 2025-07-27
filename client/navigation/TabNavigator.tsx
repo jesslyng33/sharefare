@@ -4,7 +4,7 @@ import HomeScreen from '../screens/homeScreen';
 import FriendsScreen from '../screens/FriendsScreen';
 import RideNowScreen from '../screens/RideNowScreen';
 import ScheduleScreen from '../screens/ScheduleScreen';
-import YouScreen from '../screens/YouScreen';
+import YouStackNavigator from './YouStackNavigator';
 
 const Tab = createBottomTabNavigator();
 
@@ -20,7 +20,7 @@ export default function TabNavigator() {
       <Tab.Screen name="Friends" component={FriendsScreen} />
       <Tab.Screen name="Ride Now" component={RideNowScreen} />
       <Tab.Screen name="Schedule" component={ScheduleScreen} />
-      <Tab.Screen name="You" component={YouScreen} />
+      <Tab.Screen name="You" component={YouStackNavigator} />
     </Tab.Navigator>
   );
 }
