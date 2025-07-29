@@ -1,15 +1,25 @@
 import * as React from "react";
 import { StyleSheet, View, Text, Button } from "react-native";
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../types/navigation';
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function HomeScreen() {
+    const navigation = useNavigation<NavigationProp>();
+
     return (
         <View style={styles.container}>
             <Text style={styles.title}>welcome, aaron!</Text>
-            <Button title="sign up / sign in"></Button>
+            <Button
+                title="sign up / sign in"
+                onPress={() => navigation.navigate("FullName")}
+            />
             <Text style={styles.subtitle}>ride now or schedule a ride below!</Text>
         </View>
     );
-};
+}
 
 const styles = StyleSheet.create({
     container: {
