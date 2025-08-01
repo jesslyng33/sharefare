@@ -7,6 +7,7 @@ import MajorScreen from '../screens/onboarding/Major';
 import InstagramScreen from '../screens/onboarding/Instagram';
 import ProfilePictureScreen from '../screens/onboarding/ProfilePicture';
 import PreferencesScreen from '../screens/onboarding/Preferences';
+import FriendRequestsScreen from '../screens/FriendRequestsScreen';
 
 const Stack = createStackNavigator();
 
@@ -26,6 +27,7 @@ export default function RootNavigator() {
       <Stack.Screen name="Instagram" component={InstagramScreen} />
       <Stack.Screen name="ProfilePicture" component={ProfilePictureScreen} />
       <Stack.Screen name="Preferences" component={PreferencesScreen} />
+      <Stack.Screen name="FriendRequests" component={FriendRequestsScreen} />
     </Stack.Navigator>
   );
 }

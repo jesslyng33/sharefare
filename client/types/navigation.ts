@@ -6,5 +6,6 @@ export type RootStackParamList = {
   Instagram: undefined;
   ProfilePicture: undefined;
   Preferences: undefined;
+  FriendRequests: undefined;
 };
   
