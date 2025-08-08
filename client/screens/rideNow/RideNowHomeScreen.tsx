@@ -1,7 +1,14 @@
 import React, { useState } from "react";
 import { StyleSheet, View, Text, TextInput, Pressable, Platform, ViewStyle, StyleProp, SafeAreaView } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import type { StackNavigationProp } from '@react-navigation/stack';
+import { RideNowStackParamList } from '../../navigation/RideNowStackNavigator';
+
+type Nav = StackNavigationProp<RideNowStackParamList, 'Home'>;
 
 export default function RideNowHomeScreen() {
+    const navigation = useNavigation<Nav>();
+    
     // const [phoneNumber, setPhoneNumber] = useState('');
 
     // const handleLogin = async (phoneNumber) => {
@@ -69,7 +76,7 @@ export default function RideNowHomeScreen() {
             style={styles.textInput}
           />
           <Pressable
-            // onPress={() => handleLogin(phoneNumber)}
+            onPress={() => navigation.navigate('FindingRide')}
             style={({ pressed }) => [
                 styles.button,
                 { transform: [{ scale: pressed ? 0.96 : 1 }, { translateY: pressed ? 2 : 0 }] }
