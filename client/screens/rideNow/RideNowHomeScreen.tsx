@@ -49,7 +49,7 @@ export default function RideNowHomeScreen() {
     const handleRideRequest = async () => {
       const { data, error } = await supabase.from('ride_now_requests').insert([
           {
-            user_id: '12345678-1234-1234-1234-123456789abc', // rn using a uuid that already exists in the db
+            user_id: 'a6ba1397-773d-4213-b769-38313078af2c', // rn using a uuid that already exists in the db
             starting_point: selectedStartingPoint,
             destination: selectedDestination,
           }
