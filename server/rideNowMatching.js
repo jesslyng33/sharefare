@@ -1,4 +1,20 @@
-const { supabase } = require('../client/supabase.js');
+import { supabase } from '../client/supabase.js';
+import { v4 as uuid } from 'uuid';
+
+function closeEnough(requestOne, requestTwo) {
+  return requestOne.destination === requestTwo.destination;
+}
+
+function group(queue, requestOne, requestTwo) {
+  requestOne.matched = true;
+  requestTwo.matched = true;
+  
+  newId = uuid();
+  requestOne.group_id = newId;
+  requestTwo.group_id = newId;
+
+  queue = queue.filter(req => req !== requestOne && req !== requestTwo);
+}
 
 async function poll() {
   console.log("Polling start");
@@ -17,7 +33,7 @@ async function poll() {
     if (!queues.has(request.starting_point)) {
       queues.set(request.starting_point, []);
     }
-    
+
     queues.get(request.starting_point).push(request);
   }
 
