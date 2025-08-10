@@ -3,6 +3,8 @@ import { StyleSheet, View, Text, TextInput, Pressable, Platform, ViewStyle, Styl
 import { useNavigation } from "@react-navigation/native";
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { RideNowStackParamList } from '../../navigation/RideNowStackNavigator';
+import { supabase } from '../../supabase.js';
+import { v4 as uuid } from 'uuid';
 
 type Nav = StackNavigationProp<RideNowStackParamList, 'Home'>;
 
@@ -21,6 +23,7 @@ export default function RideNowHomeScreen() {
 
     const [selectedStartingPoint, setSelectedStartingPoint] = useState<string | null>(null);
     const [showStartingPointDropdown, setShowStartingPointDropdown] = useState(false);
+    const [selectedDestination, setSelectedDestination] = useState<string | null>(null);
 
     const startingPointOptions = [
       "SFO-Terminal 1",
@@ -36,6 +39,29 @@ export default function RideNowHomeScreen() {
     const handleOptionSelect = (option: string) => {
       setSelectedStartingPoint(option);
       setShowStartingPointDropdown(false);
+    };
+
+    type RideRequest = {
+      startingPoint: string;
+      destination: string;
+    };
+
+    const handleRideRequest = async () => {
+      const { data, error } = await supabase.from('ride_now_requests').insert([
+          {
+            user_id: '12345678-1234-1234-1234-123456789abc', // rn using a uuid that already exists in the db
+            starting_point: selectedStartingPoint,
+            destination: selectedDestination,
+          }
+        ])
+
+      if (error) {
+        console.error('Error inserting ride request:', error)
+      } else {
+        console.log('Ride request inserted')
+      }
+
+      navigation.navigate('FindingRide');
     };
 
     return (
@@ -69,14 +95,15 @@ export default function RideNowHomeScreen() {
           </View>
 
           <TextInput
-            // value={phoneNumber}
-            // onChangeText={setPhoneNumber}
+            value={selectedDestination}
+            onChangeText={setSelectedDestination}
             placeholder="Choose destination"
             placeholderTextColor="#DB9C9C80"
             style={styles.textInput}
           />
+
           <Pressable
-            onPress={() => navigation.navigate('FindingRide')}
+            onPress={handleRideRequest}
             style={({ pressed }) => [
                 styles.button,
                 { transform: [{ scale: pressed ? 0.96 : 1 }, { translateY: pressed ? 2 : 0 }] }
