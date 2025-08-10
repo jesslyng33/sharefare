@@ -5,15 +5,35 @@ function closeEnough(requestOne, requestTwo) {
   return requestOne.destination === requestTwo.destination;
 }
 
-function group(queue, requestOne, requestTwo) {
-  requestOne.matched = true;
-  requestTwo.matched = true;
+async function group(queue, requests) {
+  const newId = uuid();
   
-  newId = uuid();
-  requestOne.group_id = newId;
-  requestTwo.group_id = newId;
+  for (const request of requests) {
+    queue = await groupHelper(queue, request, newId);
+  }
 
-  queue = queue.filter(req => req !== requestOne && req !== requestTwo);
+  return queue;
+}
+
+async function groupHelper(queue, request, newId) {
+  const { data, error } = await supabase
+    .from('ride_now_requests')
+    .update({
+      group_id: newId,
+      is_matched: true,
+    })
+    .match({ id: request.id });
+
+  if (error) {
+    console.error('Error updating row:', error);
+  } else {
+    console.log('Row updated');
+  }
+
+  const idx = queue.indexOf(request);
+  if (idx > -1) queue.splice(idx, 1);
+
+  return queue;
 }
 
 async function poll() {
@@ -33,11 +53,36 @@ async function poll() {
     if (!queues.has(request.starting_point)) {
       queues.set(request.starting_point, []);
     }
-
     queues.get(request.starting_point).push(request);
   }
 
-  console.log(queues);
+  for (let [key, queue] of queues.entries()) {
+    let leftoverReqs = [];
+
+    while (queue.length > 0) {
+      const requests = [];
+      const request = queue[0];
+      requests.push(request);
+      let count = 1;
+
+      let i = 1;
+      while (queue.length > i && count < 3) {
+        if (closeEnough(request, queue[i])) {
+          requests.push(queue[i]); 
+          count++;
+        }
+        i++;
+      }
+
+      if (count === 3) {
+        queue = await group(queue, requests);
+      } else {
+        leftoverReqs.push(queue.shift());
+      }
+    }
+
+    queues.set(key, leftoverReqs);
+  }
 
   // setTimeout(poll, 10000);
 }
