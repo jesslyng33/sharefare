@@ -9,16 +9,6 @@ type Nav = StackNavigationProp<RideNowStackParamList, 'Home'>;
 
 export default function RideNowHomeScreen() {
     const navigation = useNavigation<Nav>();
-    
-    // const [phoneNumber, setPhoneNumber] = useState('');
-
-    // const handleLogin = async (phoneNumber) => {
-    //     try {
-    //         await sendOTP(phoneNumber);
-    //     } catch (error) {
-    //         console.error('Error sending OTP:', error);
-    //     }
-    // };
 
     const [selectedStartingPoint, setSelectedStartingPoint] = useState<string | null>(null);
     const [showStartingPointDropdown, setShowStartingPointDropdown] = useState(false);
@@ -129,7 +119,7 @@ const styles = StyleSheet.create({
     title: {
         fontFamily: 'SplineSans-Bold',
         fontWeight: 'bold',
-        fontSize: 40,
+        fontSize: 33,
         color: '#8C4E4E',
     },
 
@@ -207,7 +197,7 @@ const styles = StyleSheet.create({
 
     textInput: {
         width: '60%',
-        marginTop: 40,
+        marginTop: 20,
         fontFamily: 'SplineSans-Bold',
         fontWeight: 'bold',
         fontSize: 18,
@@ -228,7 +218,7 @@ const styles = StyleSheet.create({
     },
 
     button: {
-        marginTop: 20,
+        marginTop: 40,
         marginBottom: 100,
         width: '80%',
         backgroundColor: '#F7E6E6',

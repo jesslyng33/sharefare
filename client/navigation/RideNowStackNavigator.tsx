@@ -14,10 +14,10 @@ const Stack = createStackNavigator<RideNowStackParamList>();
 
 export default function RideNowStackNavigator() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }} id={undefined}>
+    <Stack.Navigator screenOptions={{ headerShown: false }} id={undefined} initialRouteName="MatchedRide">
+      <Stack.Screen name="MatchedRide" component={MatchedRideScreen} />
       <Stack.Screen name="Home" component={RideNowHomeScreen} />
       <Stack.Screen name="FindingRide" component={FindingRideScreen} />
-      <Stack.Screen name="MatchedRide" component={MatchedRideScreen} />
     </Stack.Navigator>
   );
 };

@@ -37,7 +37,7 @@ export default function FindingRideScreen({ route }) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
         <View style={styles.container}>
-          <Text style={styles.title}>finding a ride for you...</Text>
+          <Text style={styles.title}>finding a group for you...</Text>
         </View>
     </SafeAreaView>
   )
@@ -56,8 +56,8 @@ const styles = StyleSheet.create({
   title: {
       fontFamily: 'SplineSans-Bold',
       fontWeight: 'bold',
-      fontSize: 40,
+      fontSize: 42,
       color: '#8C4E4E',
-      padding: 25,
+      padding: 30,
   },
 });
