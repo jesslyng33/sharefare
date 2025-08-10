@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { StyleSheet, SafeAreaView, View, Text } from "react-native";
 import { supabase } from '../../supabase.js';
+import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
+import { RideNowStackParamList } from '../../navigation/RideNowStackNavigator';
+
+type Nav = StackNavigationProp<RideNowStackParamList, 'FindingRide'>;
 
 export default function FindingRideScreen({ route }) {
   const { rideRequestId } = route.params;
+  const navigation = useNavigation<Nav>();
 
   useEffect(() => {
     const channel = supabase
@@ -18,11 +24,7 @@ export default function FindingRideScreen({ route }) {
         },
         (payload) => {
           console.log('Ride request updated!!!');
-          // if (payload.new.matched) {
-          //   navigation.replace('MatchedRide', {
-          //     groupId: payload.new.group_id,
-          //   });
-          // }
+          navigation.navigate('MatchedRide');
         }
       )
       .subscribe();
