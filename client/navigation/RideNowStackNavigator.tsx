@@ -5,7 +5,7 @@ import FindingRideScreen from '../screens/rideNow/FindingRideScreen';
 
 export type RideNowStackParamList = {
   Home: undefined;
-  FindingRide: undefined;
+  FindingRide: { rideRequestId: string };
 };
 
 const Stack = createStackNavigator<RideNowStackParamList>();

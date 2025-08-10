@@ -1,7 +1,37 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { StyleSheet, SafeAreaView, View, Text } from "react-native";
+import { supabase } from '../../supabase.js';
 
-export default function FindingRideScreen() {
+export default function FindingRideScreen({ route }) {
+  const { rideRequestId } = route.params;
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('ride-matching')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'ride_now_requests',
+          filter: `id=eq.${rideRequestId}`,
+        },
+        (payload) => {
+          console.log('Ride request updated!!!');
+          // if (payload.new.matched) {
+          //   navigation.replace('MatchedRide', {
+          //     groupId: payload.new.group_id,
+          //   });
+          // }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [rideRequestId]);
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
         <View style={styles.container}>

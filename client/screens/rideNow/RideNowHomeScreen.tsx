@@ -4,7 +4,6 @@ import { useNavigation } from "@react-navigation/native";
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { RideNowStackParamList } from '../../navigation/RideNowStackNavigator';
 import { supabase } from '../../supabase.js';
-import { v4 as uuid } from 'uuid';
 
 type Nav = StackNavigationProp<RideNowStackParamList, 'Home'>;
 
@@ -41,27 +40,28 @@ export default function RideNowHomeScreen() {
       setShowStartingPointDropdown(false);
     };
 
-    type RideRequest = {
-      startingPoint: string;
-      destination: string;
-    };
+    const id = '12345678-1234-1234-1234-123456789abc' // jess
 
     const handleRideRequest = async () => {
       const { data, error } = await supabase.from('ride_now_requests').insert([
           {
-            user_id: 'a6ba1397-773d-4213-b769-38313078af2c', // rn using a uuid that already exists in the db
+            user_id: id, // rn using a uuid that already exists in the db (jess)
             starting_point: selectedStartingPoint,
             destination: selectedDestination,
           }
         ])
+        .select();
 
       if (error) {
         console.error('Error inserting ride request:', error)
       } else {
-        console.log('Ride request inserted')
+        console.log('Ride request inserted');
+        const rideRequestId = data[0].id;
+    
+        navigation.navigate('FindingRide', {
+          rideRequestId,
+        });
       }
-
-      navigation.navigate('FindingRide');
     };
 
     return (

@@ -84,7 +84,9 @@ async function poll() {
     queues.set(key, leftoverReqs);
   }
 
-  // setTimeout(poll, 10000);
+  console.log(queues);
+
+  setTimeout(poll, 10000);
 }
 
 poll();
