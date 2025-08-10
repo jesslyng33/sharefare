@@ -24,7 +24,7 @@ export default function FindingRideScreen({ route }) {
         },
         (payload) => {
           console.log('Ride request updated!!!');
-          navigation.navigate('MatchedRide');
+          navigation.navigate('MatchedRide', { groupId: payload.new.group_id });
         }
       )
       .subscribe();

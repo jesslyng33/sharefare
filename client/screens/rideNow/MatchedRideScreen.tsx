@@ -1,16 +1,76 @@
-import React from "react";
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity } from "react-native";
+import { supabase } from '../../supabase.js';
 
-const mockData = [
-  { id: "you", name: "You", status: "pending", isSelf: true },
-  { id: "1", name: "Aaron Nguyen", status: "accepted" },
-  { id: "2", name: "Anushka Bora", status: "pending" },
-  { id: "3", name: "Connor Cho", status: "accepted" },
-];
+type Member = {
+  id: string;
+  user_id: string;
+  starting_point: string;
+  destination: string;
+  is_matched: boolean;
+  group_id: string | null;
+  profile: {
+    full_name: string;
+    year: string | null;
+    major: string | null;
+    profile_picture_uri: string | null;
+  };
+};
 
-export default function MatchedRideScreen() {
+export default function MatchedRideScreen({ route }) {
+  const { groupId } = route.params;
+  console.log(groupId);
+
+  const [members, setMembers] = useState<Member[] | null>(null);
+  // const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      const { data, error } = await supabase
+        .from('ride_now_requests')
+        .select(`
+          id,
+          user_id,
+          starting_point,
+          destination,
+          is_matched,
+          group_id,
+          profile:profiles!user_id ( 
+            full_name,
+            year,
+            major,
+            profile_picture_uri
+          )
+        `)
+        .eq('group_id', groupId);
+
+      if (!cancelled) {
+        const currentUserId = '12345678-1234-1234-1234-123456789abc';
+
+        const normalized = (data ?? []).map(row => ({
+          ...row,
+          profile: Array.isArray(row.profile) ? row.profile[0] : row.profile
+        }));
+      
+        const sorted = normalized.sort((a, b) => {
+          if (a.user_id === currentUserId) return -1;
+          if (b.user_id === currentUserId) return 1;
+          return 0;
+        });
+
+        setMembers(sorted);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [groupId]);
+
   const renderItem = ({ item }) => {
-    if (item.isSelf) {
+    console.log(item);
+
+    if (item.user_id === '12345678-1234-1234-1234-123456789abc') {
       return (
         <View style={styles.selfRow}>
           <View>
@@ -33,8 +93,10 @@ export default function MatchedRideScreen() {
       <View style={styles.row}>
         <View style={styles.avatar} />
         <View>
-          <Text style={styles.name}>{item.name}</Text>
-          <Text style={styles.subText}>Sophomore at UC Berkeley</Text>
+          <Text style={styles.name}>{item.profile.full_name}</Text>
+          <Text style={styles.subText}>
+            {item.profile.year ? `${item.profile.year} at UC Berkeley` : "UC Berkeley"}
+          </Text>
         </View>
         <View
           style={[
@@ -54,7 +116,7 @@ export default function MatchedRideScreen() {
       </View>
 
       <FlatList
-        data={mockData}
+        data={members}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={{ paddingVertical: 10 }}

@@ -7,17 +7,17 @@ import MatchedRideScreen from '../screens/rideNow/MatchedRideScreen';
 export type RideNowStackParamList = {
   Home: undefined;
   FindingRide: { rideRequestId: string };
-  MatchedRide: undefined;
+  MatchedRide: { groupId: string };
 };
 
 const Stack = createStackNavigator<RideNowStackParamList>();
 
 export default function RideNowStackNavigator() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }} id={undefined} initialRouteName="MatchedRide">
-      <Stack.Screen name="MatchedRide" component={MatchedRideScreen} />
+    <Stack.Navigator screenOptions={{ headerShown: false }} id={undefined}>
       <Stack.Screen name="Home" component={RideNowHomeScreen} />
       <Stack.Screen name="FindingRide" component={FindingRideScreen} />
+      <Stack.Screen name="MatchedRide" component={MatchedRideScreen} />
     </Stack.Navigator>
   );
 };
