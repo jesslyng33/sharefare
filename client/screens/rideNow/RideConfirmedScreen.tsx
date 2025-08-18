@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity } from "react-native";
 import { supabase } from '../../supabase.js';
-import { useNavigation } from '@react-navigation/native';
-import type { StackNavigationProp } from '@react-navigation/stack';
-import { RideNowStackParamList } from '../../navigation/RideNowStackNavigator';
 
 type Member = {
   id: string;
@@ -20,11 +17,8 @@ type Member = {
   };
 };
 
-type Nav = StackNavigationProp<RideNowStackParamList, 'MatchedRide'>;
-
-export default function MatchedRideScreen({ route }) {
+export default function RideConfirmedScreen({ route }) {
   const { groupId } = route.params;
-  const navigation = useNavigation<Nav>();
 
   const [members, setMembers] = useState<Member[] | null>(null);
 
@@ -95,7 +89,7 @@ export default function MatchedRideScreen({ route }) {
           }
 
           if (payload.new.status === 'completed') {
-            navigation.navigate('RideConfirmed', { groupId: payload.new.group_id });
+            console.log('COMPLETED!!!')
           }
         }
       )
@@ -148,7 +142,7 @@ export default function MatchedRideScreen({ route }) {
         <View
           style={[
             styles.statusDot,
-            { backgroundColor: item.status === "accepted" || "completed" ? "green" : "#ccc" },
+            { backgroundColor: item.status === "accepted" ? "green" : "#ccc" },
           ]}
         />
       </View>
@@ -157,7 +151,7 @@ export default function MatchedRideScreen({ route }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.header}>Waiting thirty seconds for all to accept...</Text>
+      <Text style={styles.header}>Your Ride is Confirmed.</Text>
       <View style={styles.progressBarBackground}>
         <View style={[styles.progressBarFill, { width: "20%" }]} />
       </View>

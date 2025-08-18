@@ -3,11 +3,13 @@ import { createStackNavigator } from '@react-navigation/stack';
 import RideNowHomeScreen from '../screens/rideNow/RideNowHomeScreen';
 import FindingRideScreen from '../screens/rideNow/FindingRideScreen';
 import MatchedRideScreen from '../screens/rideNow/MatchedRideScreen';
+import RideConfirmedScreen from '../screens/rideNow/RideConfirmedScreen';
 
 export type RideNowStackParamList = {
   Home: undefined;
   FindingRide: { rideRequestId: string };
   MatchedRide: { groupId: string };
+  RideConfirmed: { groupId: string };
 };
 
 const Stack = createStackNavigator<RideNowStackParamList>();
@@ -18,6 +20,7 @@ export default function RideNowStackNavigator() {
       <Stack.Screen name="Home" component={RideNowHomeScreen} />
       <Stack.Screen name="FindingRide" component={FindingRideScreen} />
       <Stack.Screen name="MatchedRide" component={MatchedRideScreen} />
+      <Stack.Screen name="RideConfirmed" component={RideConfirmedScreen} />
     </Stack.Navigator>
   );
 };
