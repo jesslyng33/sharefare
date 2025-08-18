@@ -39,3 +39,34 @@ export async function leave(req, res) {
 
   res.json({ ok: true, action: 'leave' });
 }
+
+async function requeue(rideRequest, atBack) {
+  const { id } = rideRequest.id;
+
+  if (atBack) {
+    const { data, error } = await supabase
+    .from('ride_now_requests')
+    .update({
+      group_id: null,
+      is_matched: false,
+      status: 'left',
+      requested_at: new Date().toISOString(),
+    })
+    .match({ id: id });
+  } else {
+    const { data, error } = await supabase
+    .from('ride_now_requests')
+    .update({
+      group_id: null,
+      is_matched: false,
+      status: 'pending',
+    })
+    .match({ id: id });
+  }
+
+  if (error) {
+    console.error('Error updating row:', error);
+  } else {
+    console.log('Row updated');
+  }
+}
