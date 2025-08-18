@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
+import { supabase } from '../supabase.js';
 
 // Define the screens and route names
 const screens = [
@@ -16,6 +17,138 @@ const screens = [
 
 export default function YouScreen() {
   const navigation = useNavigation<StackNavigationProp<any>>();
+  const [userData, setUserData] = useState<{
+    full_name?: string;
+    profile_picture_uri?: string;
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const getImageSource = () => {
+    if (!userData?.profile_picture_uri) {
+      return require('../assets/jess.png');
+    }
+    
+    const uri = userData.profile_picture_uri;
+    
+    // Check if it's a Supabase Storage URL (permanent)
+    if (uri.startsWith('https://') && uri.includes('supabase.co')) {
+      console.log('Using Supabase Storage URL:', uri);
+      return { uri };
+    }
+    
+    // Check if it's a local file URI (temporary - should be avoided)
+    if (uri.startsWith('file://') || uri.startsWith('content://')) {
+      console.log('Warning: Using local file URI (temporary):', uri);
+      return { uri };
+    }
+    
+    // If it's not a valid URI, use fallback
+    console.log('Invalid image URI:', uri);
+    return require('../assets/jess.png');
+  };
+
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
+  const fetchUserData = async () => {
+    try {
+      const mockUserId = '12345678-1234-1234-1234-123456789abc';
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('full_name, profile_picture_uri')
+        .eq('id', mockUserId)
+        .single();
+
+      if (error) {
+        console.log('Error fetching user data:', error);
+      } else {
+        console.log('Fetched user data:', data);
+        
+        // Check if we need to migrate a local URI to Supabase Storage
+        if (data?.profile_picture_uri && 
+            (data.profile_picture_uri.startsWith('file://') || data.profile_picture_uri.startsWith('content://'))) {
+          console.log('Found local URI, attempting to migrate to Supabase Storage...');
+          await migrateLocalUriToStorage(data.profile_picture_uri, mockUserId);
+        } else {
+          setUserData(data);
+        }
+      }
+    } catch (error) {
+      console.log('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const migrateLocalUriToStorage = async (localUri: string, userId: string) => {
+    try {
+      // Import FileSystem for reading local files
+      const FileSystem = require('expo-file-system');
+      
+      // Read the local file as base64
+      const base64 = await FileSystem.readAsStringAsync(localUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      
+      // Get file extension
+      const fileExtension = localUri.split('.').pop() || 'jpg';
+      const fileName = `profile-picture-${Date.now()}.${fileExtension}`;
+      
+      // Helper function to decode base64
+      const decode = (base64: string) => {
+        const binaryString = atob(base64);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        return bytes;
+      };
+      
+      // Upload to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('profile-pictures')
+        .upload(fileName, decode(base64), {
+          contentType: `image/${fileExtension}`,
+        });
+
+      if (error) {
+        console.log('Migration upload error:', error);
+        // If migration fails, still use the local URI
+        setUserData({ full_name: userData?.full_name, profile_picture_uri: localUri });
+        return;
+      }
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('profile-pictures')
+        .getPublicUrl(fileName);
+
+      console.log('Successfully migrated to Supabase Storage:', urlData.publicUrl);
+      
+      // Update the database with the new permanent URL
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ profile_picture_uri: urlData.publicUrl })
+        .eq('id', userId);
+
+      if (updateError) {
+        console.log('Error updating database with new URL:', updateError);
+      }
+      
+      // Update local state
+      setUserData({ 
+        full_name: userData?.full_name, 
+        profile_picture_uri: urlData.publicUrl 
+      });
+      
+    } catch (error) {
+      console.log('Migration error:', error);
+      // If migration fails, still use the local URI
+      setUserData({ full_name: userData?.full_name, profile_picture_uri: localUri });
+    }
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
@@ -23,11 +156,15 @@ export default function YouScreen() {
         {/* Profile Header */}
         <View style={styles.profileContainer}>
           <Image
-            source={require('../assets/jess.png')} // Make sure this path is correct
+            source={getImageSource()}
             style={styles.avatar}
+            onError={(error) => console.log('Image loading error:', error.nativeEvent)}
+            onLoad={() => console.log('Image loaded successfully')}
           />
           <TouchableOpacity style={styles.profileButton}>
-            <Text style={styles.profileName}>Jesslyn Gunadi</Text>
+            <Text style={styles.profileName}>
+              {userData?.full_name || 'Loading...'}
+            </Text>
             <Text style={styles.viewProfile}>View profile</Text>
           </TouchableOpacity>
         </View>
@@ -54,6 +191,8 @@ export default function YouScreen() {
     </SafeAreaView>
   );
 }
+
+
 
 const styles = StyleSheet.create({
   container: {
