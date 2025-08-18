@@ -86,7 +86,7 @@ async function poll() {
 
   console.log(queues);
 
-  setTimeout(poll, 10000);
+  setTimeout(poll, 3000);
 }
 
 poll();

@@ -74,8 +74,8 @@ export default function MatchedRideScreen({ route }) {
       return (
         <View style={styles.selfRow}>
           <View>
-            <Text style={styles.name}>{item.name}</Text>
-            <Text style={styles.subText}>Sophomore at UC Berkeley</Text>
+            <Text style={styles.name}>{item.profile.full_name}</Text>
+            <Text style={styles.subText}>{item.profile.year} at UC Berkeley</Text>
           </View>
           <View style={styles.selfButtons}>
             <TouchableOpacity style={styles.leaveButton}>
