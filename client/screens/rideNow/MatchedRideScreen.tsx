@@ -19,15 +19,15 @@ type Member = {
 
 export default function MatchedRideScreen({ route }) {
   const { groupId } = route.params;
-  console.log(groupId);
 
   const [members, setMembers] = useState<Member[] | null>(null);
-  // const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-
-    (async () => {
+    const currentUserId = '12345678-1234-1234-1234-123456789abc';
+    console.log(groupId);
+  
+    const fetchGroup = async () => {
       const { data, error } = await supabase
         .from('ride_now_requests')
         .select(`
@@ -37,7 +37,8 @@ export default function MatchedRideScreen({ route }) {
           destination,
           is_matched,
           group_id,
-          profile:profiles!user_id ( 
+          status,
+          profile:profiles!user_id (
             full_name,
             year,
             major,
@@ -45,31 +46,59 @@ export default function MatchedRideScreen({ route }) {
           )
         `)
         .eq('group_id', groupId);
-
-      if (!cancelled) {
-        const currentUserId = '12345678-1234-1234-1234-123456789abc';
-
-        const normalized = (data ?? []).map(row => ({
-          ...row,
-          profile: Array.isArray(row.profile) ? row.profile[0] : row.profile
-        }));
-      
-        const sorted = normalized.sort((a, b) => {
-          if (a.user_id === currentUserId) return -1;
-          if (b.user_id === currentUserId) return 1;
-          return 0;
-        });
-
-        setMembers(sorted);
+  
+      if (error) {
+        console.error('fetchGroup error', error);
+        return;
       }
-    })();
+  
+      const normalized = (data ?? []).map(row => ({
+        ...row,
+        profile: Array.isArray(row.profile) ? row.profile[0] : row.profile,
+      }));
+  
+      const sorted = normalized.sort((a, b) => {
+        if (a.user_id === currentUserId) return -1;
+        if (b.user_id === currentUserId) return 1;
+        return 0;
+      });
+  
+      if (!cancelled) setMembers(sorted);
+    };
+  
+    fetchGroup();
+  
+    const channel = supabase
+      .channel(`ride-now-group-${groupId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'ride_now_requests',
+          filter: `group_id=eq.${groupId}`,
+        },
+        async (payload) => {
+          console.log('UPDATED!!!')
 
-    return () => { cancelled = true; };
+          try {
+            await fetchGroup();
+            console.log('fetchGroup finished');
+          } catch (err) {
+            console.error('fetchGroup threw error', err);
+          }
+        }
+      )
+      .subscribe();
+  
+    return () => {
+      cancelled = true;
+      console.log('unsubscribing');
+      supabase.removeChannel(channel);
+    };
   }, [groupId]);
 
   const renderItem = ({ item }) => {
-    console.log(item);
-
     if (item.user_id === '12345678-1234-1234-1234-123456789abc') {
       return (
         <View style={styles.selfRow}>

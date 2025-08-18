@@ -24,6 +24,7 @@ export default function FindingRideScreen({ route }) {
         },
         (payload) => {
           console.log('Ride request updated!!!');
+          supabase.removeChannel(channel);
           navigation.navigate('MatchedRide', { groupId: payload.new.group_id });
         }
       )

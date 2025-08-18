@@ -39,7 +39,10 @@ async function groupHelper(queue, request, newId) {
 async function poll() {
   console.log("Polling start");
 
-  const { data, error } = await supabase.from('ride_now_requests').select('*');
+  const { data, error } = await supabase
+    .from('ride_now_requests')
+    .select('*')
+    .eq('is_matched', false);
   
   if (error) {
     console.error('Supabase connection failed:', error.message);
