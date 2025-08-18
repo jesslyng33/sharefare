@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../supabase.js';
 import PinkButton from '../../components/PinkButton';
 import CustomAlert from '../../components/CustomAlert';
+import { useAuth } from '../../authentication/AuthContext';
 
 interface UserData {
   full_name?: string;
@@ -23,6 +24,7 @@ export default function AccountScreen() {
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
+  const { signOut } = useAuth();
   
   // Form state
   const [instagram, setInstagram] = useState('');
@@ -118,6 +120,27 @@ export default function AccountScreen() {
     }));
   };
 
+  const handleSignOut = async () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await signOut();
+            } catch (error) {
+              console.error('Error signing out:', error);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -180,6 +203,16 @@ export default function AccountScreen() {
             onPress={handleSave} 
             disabled={saving} 
           />
+        </View>
+
+        {/* Sign Out Button */}
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.signOutButton}
+            onPress={handleSignOut}
+          >
+            <Text style={styles.signOutText}>Sign Out</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
       
@@ -265,5 +298,17 @@ const styles = StyleSheet.create({
   buttonContainer: {
     alignItems: 'center',
     marginTop: 20,
+  },
+  signOutButton: {
+    backgroundColor: '#ff4444',
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginTop: 10,
+  },
+  signOutText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

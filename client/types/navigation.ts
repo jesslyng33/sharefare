@@ -8,4 +8,9 @@ export type RootStackParamList = {
   Preferences: undefined;
   FriendRequests: undefined;
 };
+
+export type AuthStackParamList = {
+  Login: undefined;
+  Verification: { phone: string };
+};
   
