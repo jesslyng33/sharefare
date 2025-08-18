@@ -97,6 +97,17 @@ export default function MatchedRideScreen({ route }) {
           if (payload.new.status === 'completed') {
             navigation.navigate('RideConfirmed', { groupId: payload.new.group_id });
           }
+
+          if (payload.new.status === 'left') {
+            const { data: dataOne, error: errorOne } = await supabase
+              .from('ride_now_requests')
+              .update({
+                status: 'pending',
+              })
+              .match({ id: payload.new.id });
+
+            navigation.navigate('FindingRide', { rideRequestId: payload.new.id });
+          }
         }
       )
       .subscribe();
@@ -148,7 +159,7 @@ export default function MatchedRideScreen({ route }) {
         <View
           style={[
             styles.statusDot,
-            { backgroundColor: item.status === "accepted" || "completed" ? "green" : "#ccc" },
+            { backgroundColor: item.status === "accepted" ? "green" : "#ccc" },
           ]}
         />
       </View>
