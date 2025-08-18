@@ -1,11 +1,11 @@
 import { supabase } from '../client/supabase.js';
 
-async function accept(req, res) {
+export async function accept(req, res) {
   console.log('accept');
+  res.json({ ok: true, action: 'accept' });
 }
 
-async function leave(req, res) {
+export async function leave(req, res) {
   console.log('leave');
+  res.json({ ok: true, action: 'leave' });
 }
-
-module.exports = { accept, leave };

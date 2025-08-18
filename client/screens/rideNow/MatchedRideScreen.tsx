@@ -78,10 +78,18 @@ export default function MatchedRideScreen({ route }) {
             <Text style={styles.subText}>{item.profile.year} at UC Berkeley</Text>
           </View>
           <View style={styles.selfButtons}>
-            <TouchableOpacity style={styles.leaveButton}>
+            <TouchableOpacity style={styles.leaveButton} onPress={() => {
+              fetch(`http://localhost:3001/ride-now/requests/${item.id}/leave`, {
+                method: 'POST',
+              });
+            }}>
               <Text style={styles.leaveText}>Leave</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.acceptButton}>
+            <TouchableOpacity style={styles.acceptButton} onPress={() => {
+              fetch(`http://localhost:3001/ride-now/requests/${item.id}/accept`, {
+                method: 'POST',
+              });
+            }}>
               <Text style={styles.acceptText}>Accept</Text>
             </TouchableOpacity>
           </View>
