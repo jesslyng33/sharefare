@@ -8,7 +8,6 @@ export const sendOTP = async (phone) => {
 };
 
 export const verifyOTP = async (phone, token) => {
-
     const { data, error } = await supabase.auth.verifyOtp({
         phone,
         token,

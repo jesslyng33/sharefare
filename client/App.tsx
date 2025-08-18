@@ -9,9 +9,7 @@ const Stack = createStackNavigator();
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }} id={undefined}>
-        <Stack.Screen name="MainTabs" component={TabNavigator} />
-      </Stack.Navigator>
+      <RootNavigator />
     </NavigationContainer>
   );
 }
