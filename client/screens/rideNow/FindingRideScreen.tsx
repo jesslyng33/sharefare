@@ -1,0 +1,63 @@
+import React, { useState, useEffect } from "react";
+import { StyleSheet, SafeAreaView, View, Text } from "react-native";
+import { supabase } from '../../supabase.js';
+import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
+import { RideNowStackParamList } from '../../navigation/RideNowStackNavigator';
+
+type Nav = StackNavigationProp<RideNowStackParamList, 'FindingRide'>;
+
+export default function FindingRideScreen({ route }) {
+  const { rideRequestId } = route.params;
+  const navigation = useNavigation<Nav>();
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('ride-matching')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'ride_now_requests',
+          filter: `id=eq.${rideRequestId}`,
+        },
+        (payload) => {
+          console.log('Ride request updated!!!');
+          navigation.navigate('MatchedRide', { groupId: payload.new.group_id });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [rideRequestId]);
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
+        <View style={styles.container}>
+          <Text style={styles.title}>finding a group for you...</Text>
+        </View>
+    </SafeAreaView>
+  )
+}
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 10,
+  },
+
+  title: {
+      fontFamily: 'SplineSans-Bold',
+      fontWeight: 'bold',
+      fontSize: 42,
+      color: '#8C4E4E',
+      padding: 30,
+  },
+});
