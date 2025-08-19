@@ -21,10 +21,13 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  // TEMPORARILY DISABLED AUTHENTICATION - AUTHENTICATION IS TURNED OFF
+  const [isAuthenticated, setIsAuthenticated] = useState(true); // Changed from false to true
+  const [isLoading, setIsLoading] = useState(false); // Changed from true to false
+  const [user, setUser] = useState<any>({ id: '12345678-1234-1234-1234-123456789abc' }); // Mock user
 
+  // Commented out all authentication logic temporarily
+  /*
   useEffect(() => {
     // Check initial auth state
     checkAuthState();
@@ -59,42 +62,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
     }
   };
+  */
 
   const signIn = async (phone: string) => {
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        phone,
-      });
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error sending OTP:', error);
-      throw error;
-    }
+    // Temporarily disabled - just log the phone number
+    console.log('Sign in attempted with phone:', phone);
+    // No actual authentication happening
   };
 
   const verifyCode = async (phone: string, code: string) => {
-    try {
-      const { data, error } = await supabase.auth.verifyOtp({
-        phone,
-        token: code,
-        type: 'sms',
-      });
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Error verifying code:', error);
-      throw error;
-    }
+    // Temporarily disabled - just log the verification attempt
+    console.log('Verification attempted with phone:', phone, 'code:', code);
+    // No actual verification happening
   };
 
   const signOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error signing out:', error);
-      throw error;
-    }
+    // Temporarily disabled - just log the sign out attempt
+    console.log('Sign out attempted');
+    // No actual sign out happening
   };
 
   const value = {
