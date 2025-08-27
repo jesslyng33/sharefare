@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { supabase } from '../supabase.js';
+import { useAuth } from '../authentication/AuthContext';
 
 // Define the screens and route names
 const screens = [
@@ -17,6 +18,7 @@ const screens = [
 
 export default function YouScreen() {
   const navigation = useNavigation<StackNavigationProp<any>>();
+  const { signOut, user } = useAuth();
   const [userData, setUserData] = useState<{
     full_name?: string;
     profile_picture_uri?: string;
@@ -48,17 +50,22 @@ export default function YouScreen() {
   };
 
   useEffect(() => {
-    fetchUserData();
-  }, []);
+    if (user?.id) {
+      fetchUserData();
+    }
+  }, [user?.id]);
 
   const fetchUserData = async () => {
     try {
-      const mockUserId = '12345678-1234-1234-1234-123456789abc';
+      if (!user?.id) {
+        console.log('No authenticated user found');
+        return;
+      }
       
       const { data, error } = await supabase
         .from('profiles')
         .select('full_name, profile_picture_uri')
-        .eq('id', mockUserId)
+        .eq('id', user.id)
         .single();
 
       if (error) {
@@ -70,7 +77,7 @@ export default function YouScreen() {
         if (data?.profile_picture_uri && 
             (data.profile_picture_uri.startsWith('file://') || data.profile_picture_uri.startsWith('content://'))) {
           console.log('Found local URI, attempting to migrate to Supabase Storage...');
-          await migrateLocalUriToStorage(data.profile_picture_uri, mockUserId);
+          await migrateLocalUriToStorage(data.profile_picture_uri, user.id);
         } else {
           setUserData(data);
         }
@@ -184,7 +191,30 @@ export default function YouScreen() {
         </View>
 
         {/* Log Out */}
-        <TouchableOpacity style={styles.logoutButton}>
+        <TouchableOpacity 
+          style={styles.logoutButton}
+          onPress={async () => {
+            Alert.alert(
+              'Sign Out',
+              'Are you sure you want to sign out?',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Sign Out',
+                  style: 'destructive',
+                  onPress: async () => {
+                    try {
+                      await signOut();
+                    } catch (error) {
+                      console.error('Sign out error:', error);
+                      Alert.alert('Error', 'Failed to sign out');
+                    }
+                  },
+                },
+              ]
+            );
+          }}
+        >
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
       </ScrollView>

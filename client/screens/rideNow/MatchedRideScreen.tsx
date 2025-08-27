@@ -4,6 +4,7 @@ import { supabase } from '../../supabase.js';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { RideNowStackParamList } from '../../navigation/RideNowStackNavigator';
+import { useAuth } from '../../authentication/AuthContext';
 
 type Member = {
   id: string;
@@ -25,12 +26,14 @@ type Nav = StackNavigationProp<RideNowStackParamList, 'MatchedRide'>;
 export default function MatchedRideScreen({ route }) {
   const { groupId } = route.params;
   const navigation = useNavigation<Nav>();
+  const { user } = useAuth();
 
   const [members, setMembers] = useState<Member[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    const currentUserId = '12345678-1234-1234-1234-123456789abc';
+    const currentUserId = user?.id;
+    if (!currentUserId) return;
     console.log(groupId);
   
     const fetchGroup = async () => {
@@ -117,10 +120,10 @@ export default function MatchedRideScreen({ route }) {
       console.log('unsubscribing');
       supabase.removeChannel(channel);
     };
-  }, [groupId]);
+  }, [groupId, user?.id]);
 
   const renderItem = ({ item }) => {
-    if (item.user_id === '12345678-1234-1234-1234-123456789abc') {
+    if (item.user_id === user?.id) {
       return (
         <View style={styles.selfRow}>
           <View>

@@ -3,10 +3,11 @@ import { NavigationContainer } from '@react-navigation/native';
 import { AuthProvider, useAuth } from './authentication/AuthContext';
 import RootNavigator from './navigation/RootNavigator';
 import AuthNavigator from './navigation/AuthNavigator';
+import OnboardingNavigator from './navigation/OnboardingNavigator';
 import LoadingScreen from './components/LoadingScreen';
 
 const AppContent = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, hasCompletedOnboarding } = useAuth();
 
   if (isLoading) {
     return <LoadingScreen message="Checking authentication..." />;
@@ -14,7 +15,15 @@ const AppContent = () => {
 
   return (
     <NavigationContainer>
-      {isAuthenticated ? <RootNavigator /> : <AuthNavigator />}
+      {isAuthenticated ? (
+        hasCompletedOnboarding ? (
+          <RootNavigator />
+        ) : (
+          <OnboardingNavigator />
+        )
+      ) : (
+        <AuthNavigator />
+      )}
     </NavigationContainer>
   );
 };

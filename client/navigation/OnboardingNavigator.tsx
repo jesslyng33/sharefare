@@ -1,0 +1,29 @@
+import React from 'react';
+import { createStackNavigator } from '@react-navigation/stack';
+import FullNameScreen from '../screens/onboarding/FullName';
+import YearScreen from '../screens/onboarding/Year';
+import MajorScreen from '../screens/onboarding/Major';
+import InstagramScreen from '../screens/onboarding/Instagram';
+import ProfilePictureScreen from '../screens/onboarding/ProfilePicture';
+import PreferencesScreen from '../screens/onboarding/Preferences';
+
+const Stack = createStackNavigator();
+
+export default function OnboardingNavigator() {
+  return (
+    <Stack.Navigator 
+      screenOptions={{ 
+        headerShown: false 
+      }}
+      initialRouteName="FullName"
+      id={undefined}
+    >
+      <Stack.Screen name="FullName" component={FullNameScreen} />
+      <Stack.Screen name="Year" component={YearScreen} />
+      <Stack.Screen name="Major" component={MajorScreen} />
+      <Stack.Screen name="Instagram" component={InstagramScreen} />
+      <Stack.Screen name="ProfilePicture" component={ProfilePictureScreen} />
+      <Stack.Screen name="Preferences" component={PreferencesScreen} />
+    </Stack.Navigator>
+  );
+}

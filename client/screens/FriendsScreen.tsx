@@ -5,15 +5,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { supabase } from '../supabase.js';
+import FriendPopup from '../components/FriendPopup';
+import { useAuth } from '../authentication/AuthContext';
 
 interface Friend {
   name: string;
   instagram: string;
 }
 
-const FriendItem: React.FC<{ friend: Friend }> = ({ friend }) => {
+const FriendItem: React.FC<{ friend: Friend; onPress: (friend: Friend) => void }> = ({ friend, onPress }) => {
   return (
-    <TouchableOpacity style={styles.friendItem}>
+    <TouchableOpacity 
+      style={styles.friendItem} 
+      onPress={() => onPress(friend)}
+      activeOpacity={0.7}
+    >
       <View style={styles.friendInfo}>
         <Text style={styles.friendName}>{friend.name}</Text>
         <Ionicons name="logo-instagram" size={20} color="#E4405F" />
@@ -25,21 +31,30 @@ const FriendItem: React.FC<{ friend: Friend }> = ({ friend }) => {
 
 export default function FriendsScreen() {
   const navigation = useNavigation<StackNavigationProp<any>>();
+  const { user } = useAuth();
   const [friends, setFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
+  const [popupVisible, setPopupVisible] = useState(false);
   
   useEffect(() => {
-    fetchFriends();
-  }, []);
+    if (user?.id) {
+      fetchFriends();
+    }
+  }, [user?.id]);
 
   const fetchFriends = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Assuming the current user ID - you may need to get this from auth context
-      const currentUserId = '12345678-1234-1234-1234-123456789abc';
+      // Get current user ID from auth context
+      const currentUserId = user?.id;
+      if (!currentUserId) {
+        setError('User not authenticated');
+        return;
+      }
       
       // First, get the friend_ids for the current user
       const { data: friendIds, error: friendError } = await supabase
@@ -90,6 +105,18 @@ export default function FriendsScreen() {
     navigation.navigate('FriendRequests');
   };
 
+  const handleFriendPress = (friend: Friend) => {
+    console.log('Friend pressed:', friend);
+    setSelectedFriend(friend);
+    setPopupVisible(true);
+    console.log('Popup should be visible now');
+  };
+
+  const handleClosePopup = () => {
+    setPopupVisible(false);
+    setSelectedFriend(null);
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -134,34 +161,43 @@ export default function FriendsScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
+    <>
+      <SafeAreaView style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+          </View>
+          <TouchableOpacity onPress={handleInboxPress} style={styles.inboxButton}>
+            <Ionicons name="mail" size={24} color="#8C4E4E" />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={handleInboxPress} style={styles.inboxButton}>
-          <Ionicons name="mail" size={24} color="#8C4E4E" />
-        </TouchableOpacity>
-      </View>
 
-      {/* Main Content */}
-      <View style={styles.contentContainer}>
-        <Text style={styles.title}>friends</Text>
-        
-        <ScrollView style={styles.friendsList} showsVerticalScrollIndicator={false}>
-          {friends.map((friend, index) => (
-            <FriendItem key={`${friend.name}-${index}`} friend={friend} />
-          ))}
+        {/* Main Content */}
+        <View style={styles.contentContainer}>
+          <Text style={styles.title}>friends</Text>
           
-          {friends.length === 0 && (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>No friends yet</Text>
-              <Text style={styles.emptySubtext}>Add friends to see them here</Text>
-            </View>
-          )}
-        </ScrollView>
-      </View>
-    </SafeAreaView>
+          <ScrollView style={styles.friendsList} showsVerticalScrollIndicator={false}>
+            {friends.map((friend, index) => (
+              <FriendItem key={`${friend.name}-${index}`} friend={friend} onPress={handleFriendPress} />
+            ))}
+            
+            {friends.length === 0 && (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyText}>No friends yet</Text>
+                <Text style={styles.emptySubtext}>Add friends to see them here</Text>
+              </View>
+            )}
+          </ScrollView>
+        </View>
+      </SafeAreaView>
+      
+      {/* Friend Popup */}
+      <FriendPopup
+        visible={popupVisible}
+        friend={selectedFriend}
+        onClose={handleClosePopup}
+      />
+    </>
   );
 }
 

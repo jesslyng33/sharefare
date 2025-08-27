@@ -24,7 +24,7 @@ export default function AccountScreen() {
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   
   // Form state
   const [instagram, setInstagram] = useState('');
@@ -36,17 +36,22 @@ export default function AccountScreen() {
   });
 
   useEffect(() => {
-    fetchUserData();
-  }, []);
+    if (user?.id) {
+      fetchUserData();
+    }
+  }, [user?.id]);
 
   const fetchUserData = async () => {
     try {
-      const mockUserId = '12345678-1234-1234-1234-123456789abc';
+      if (!user?.id) {
+        console.log('No authenticated user found');
+        return;
+      }
       
       const { data, error } = await supabase
         .from('profiles')
         .select('full_name, instagram, preferences')
-        .eq('id', mockUserId)
+        .eq('id', user.id)
         .single();
 
       if (error) {
@@ -78,7 +83,12 @@ export default function AccountScreen() {
     setSaving(true);
 
     try {
-      const mockUserId = '12345678-1234-1234-1234-123456789abc';
+      if (!user?.id) {
+        setAlertTitle('Error');
+        setAlertMessage('User not authenticated');
+        setAlertVisible(true);
+        return;
+      }
 
       const { error } = await supabase
         .from('profiles')
@@ -86,7 +96,7 @@ export default function AccountScreen() {
           instagram: instagram.trim(),
           preferences 
         })
-        .eq('id', mockUserId);
+        .eq('id', user.id);
 
       if (error) {
         setAlertTitle('Database error');

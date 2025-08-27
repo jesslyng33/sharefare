@@ -5,9 +5,11 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   user: any;
+  hasCompletedOnboarding: boolean;
   signIn: (phone: string) => Promise<void>;
   verifyCode: (phone: string, code: string) => Promise<void>;
   signOut: () => Promise<void>;
+  checkOnboardingStatus: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,13 +23,11 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // TEMPORARILY DISABLED AUTHENTICATION - AUTHENTICATION IS TURNED OFF
-  const [isAuthenticated, setIsAuthenticated] = useState(true); // Changed from false to true
-  const [isLoading, setIsLoading] = useState(false); // Changed from true to false
-  const [user, setUser] = useState<any>({ id: '12345678-1234-1234-1234-123456789abc' }); // Mock user
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
 
-  // Commented out all authentication logic temporarily
-  /*
   useEffect(() => {
     // Check initial auth state
     checkAuthState();
@@ -38,9 +38,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (event === 'SIGNED_IN' && session) {
           setIsAuthenticated(true);
           setUser(session.user);
+          // Ensure profile exists and check onboarding status when user signs in
+          await ensureProfileExists(session.user.id);
+          await checkOnboardingStatus(session.user.id);
         } else if (event === 'SIGNED_OUT') {
           setIsAuthenticated(false);
           setUser(null);
+          setHasCompletedOnboarding(false);
         }
         setIsLoading(false);
       }
@@ -55,6 +59,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session) {
         setIsAuthenticated(true);
         setUser(session.user);
+        // Ensure profile exists for existing users
+        await ensureProfileExists(session.user.id);
+        await checkOnboardingStatus(session.user.id);
       }
     } catch (error) {
       console.error('Error checking auth state:', error);
@@ -62,33 +69,117 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
     }
   };
-  */
+
+  const checkOnboardingStatus = async (userId?: string) => {
+    if (!userId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('full_name, year, major, instagram, profile_picture_uri, preferences')
+        .eq('id', userId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 is "not found" error
+        console.error('Error checking onboarding status:', error);
+        setHasCompletedOnboarding(false);
+        return;
+      }
+
+      if (error && error.code === 'PGRST116') {
+        // Profile doesn't exist yet, user needs to complete onboarding
+        console.log('Profile not found, user needs onboarding');
+        setHasCompletedOnboarding(false);
+        return;
+      }
+
+      // Check if user has completed basic profile setup
+      const hasProfile = data && data.full_name && data.year && data.major;
+      setHasCompletedOnboarding(!!hasProfile);
+    } catch (error) {
+      console.error('Error checking onboarding status:', error);
+      setHasCompletedOnboarding(false);
+    }
+  };
 
   const signIn = async (phone: string) => {
-    // Temporarily disabled - just log the phone number
-    console.log('Sign in attempted with phone:', phone);
-    // No actual authentication happening
+    try {
+      const { error } = await supabase.auth.signInWithOtp({ phone });
+      if (error) throw error;
+    } catch (error: any) {
+      console.error('Sign in error:', error);
+      throw error;
+    }
   };
 
   const verifyCode = async (phone: string, code: string) => {
-    // Temporarily disabled - just log the verification attempt
-    console.log('Verification attempted with phone:', phone, 'code:', code);
-    // No actual verification happening
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        phone,
+        token: code,
+        type: 'sms',
+      });
+      if (error) throw error;
+      
+      // If verification successful, ensure profile exists
+      if (data.user) {
+        await ensureProfileExists(data.user.id);
+      }
+    } catch (error: any) {
+      console.error('Verification error:', error);
+      throw error;
+    }
+  };
+
+  const ensureProfileExists = async (userId: string) => {
+    try {
+      // Check if profile already exists
+      const { data: existingProfile, error: checkError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', userId)
+        .single();
+
+      if (checkError && checkError.code === 'PGRST116') {
+        // Profile doesn't exist, create a new one
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert({
+            id: userId
+          });
+
+        if (insertError) {
+          console.error('Error creating profile:', insertError);
+        } else {
+          console.log('Profile created successfully for user:', userId);
+        }
+      } else if (checkError) {
+        console.error('Error checking profile existence:', checkError);
+      }
+    } catch (error) {
+      console.error('Error ensuring profile exists:', error);
+    }
   };
 
   const signOut = async () => {
-    // Temporarily disabled - just log the sign out attempt
-    console.log('Sign out attempted');
-    // No actual sign out happening
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+    } catch (error: any) {
+      console.error('Sign out error:', error);
+      throw error;
+    }
   };
 
   const value = {
     isAuthenticated,
     isLoading,
     user,
+    hasCompletedOnboarding,
     signIn,
     verifyCode,
-    signOut
+    signOut,
+    checkOnboardingStatus: () => checkOnboardingStatus(user?.id)
   };
 
   return (

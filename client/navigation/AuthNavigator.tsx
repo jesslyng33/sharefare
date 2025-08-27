@@ -12,6 +12,7 @@ export default function AuthNavigator() {
       screenOptions={{
         headerShown: false,
       }}
+      id={undefined}
     >
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Verification" component={VerificationScreen} />

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity } from "react-native";
 import { supabase } from '../../supabase.js';
+import { useAuth } from '../../authentication/AuthContext';
 
 type Member = {
   id: string;
@@ -19,12 +20,14 @@ type Member = {
 
 export default function RideConfirmedScreen({ route }) {
   const { groupId } = route.params;
+  const { user } = useAuth();
 
   const [members, setMembers] = useState<Member[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    const currentUserId = '12345678-1234-1234-1234-123456789abc';
+    const currentUserId = user?.id;
+    if (!currentUserId) return;
     console.log(groupId);
   
     const fetchGroup = async () => {
@@ -100,10 +103,10 @@ export default function RideConfirmedScreen({ route }) {
       console.log('unsubscribing');
       supabase.removeChannel(channel);
     };
-  }, [groupId]);
+  }, [groupId, user?.id]);
 
   const renderItem = ({ item }) => {
-    if (item.user_id === '12345678-1234-1234-1234-123456789abc') {
+    if (item.user_id === user?.id) {
       return (
         <View style={styles.selfRow}>
           <View>

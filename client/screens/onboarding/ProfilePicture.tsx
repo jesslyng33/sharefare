@@ -6,12 +6,14 @@ import PinkButton from '../../components/PinkButton';
 import { supabase } from '../../supabase.js';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
+import { useAuth } from '../../authentication/AuthContext';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ProfilePicture'>;
 
 const ProfilePictureScreen: React.FC<Props> = ({ navigation }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const { user } = useAuth();
 
   const requestPermissions = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -100,12 +102,15 @@ const ProfilePictureScreen: React.FC<Props> = ({ navigation }) => {
     setLoading(true);
     
     try {
-      const mockUserId = '12345678-1234-1234-1234-123456789abc';
+      if (!user?.id) {
+        Alert.alert('Error', 'User not authenticated');
+        return;
+      }
       
       const { error } = await supabase
         .from('profiles')
         .update({ profile_picture_skipped: true })
-        .eq('id', mockUserId);
+        .eq('id', user.id);
 
       if (error) {
         Alert.alert('Database error', error.message);
@@ -129,7 +134,10 @@ const ProfilePictureScreen: React.FC<Props> = ({ navigation }) => {
     setLoading(true);
 
     try {
-      const mockUserId = '12345678-1234-1234-1234-123456789abc';
+      if (!user?.id) {
+        Alert.alert('Error', 'User not authenticated');
+        return;
+      }
       
       // Try to upload to Supabase Storage first
       let imageUrl;
@@ -146,7 +154,7 @@ const ProfilePictureScreen: React.FC<Props> = ({ navigation }) => {
       const { error } = await supabase
         .from('profiles')
         .update({ profile_picture_uri: imageUrl })
-        .eq('id', mockUserId);
+        .eq('id', user.id);
 
       if (error) {
         Alert.alert('Database error', error.message);

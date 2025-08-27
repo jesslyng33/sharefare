@@ -1,69 +1,73 @@
-# Authentication Setup
+# Authentication Flow Documentation
 
-This app uses Supabase authentication with phone number OTP (One-Time Password) verification.
+## Overview
+The app now implements a complete phone number authentication flow with automatic profile creation and onboarding routing.
 
-## Features
+## Flow Description
 
-- **Phone-based authentication**: Users enter their phone number to receive a verification code
-- **OTP verification**: 6-digit code sent via SMS for secure login
-- **Automatic session management**: Users stay logged in until they sign out
-- **Protected routes**: All app screens require authentication
+### 1. Phone Number Entry (LoginScreen)
+- User enters their phone number with country code (e.g., +1234567890)
+- Basic validation ensures proper format
+- Sends OTP via Supabase Auth
 
-## How it works
+### 2. Code Verification (VerificationScreen)
+- User enters the 6-digit verification code
+- Upon successful verification:
+  - User is authenticated via Supabase
+  - Profile record is automatically created in the `profiles` table if it doesn't exist
+  - Onboarding status is checked
 
-1. **Login Screen**: User enters their phone number (with country code)
-2. **Code Verification**: User receives a 6-digit code via SMS and enters it
-3. **Authentication**: Upon successful verification, user is automatically logged in
-4. **App Access**: User can now access all app features
+### 3. Profile Check & Routing
+The app automatically checks if the user has completed onboarding by looking for required fields in the `profiles` table:
 
-## File Structure
+**Required fields for completed onboarding:**
+- `full_name`
+- `year` 
+- `major`
 
-```
-client/
-├── authentication/
-│   ├── AuthContext.tsx    # Authentication context and state management
-│   └── auth.js           # Supabase auth functions
-├── screens/
-│   └── auth/
-│       ├── LoginScreen.tsx        # Phone number input screen
-│       └── VerificationScreen.tsx # OTP verification screen
-├── navigation/
-│   └── AuthNavigator.tsx # Authentication flow navigation
-└── App.tsx               # Main app with auth provider
-```
+**Routing Logic:**
+- If profile exists with required fields → User goes to main app (RootNavigator)
+- If profile doesn't exist or missing required fields → User goes to onboarding (OnboardingNavigator)
 
-## Usage
+### 4. Onboarding Flow
+If user needs to complete onboarding, they go through:
+1. FullName → Year → Major → Instagram → ProfilePicture → Preferences
+2. Each screen saves data to the `profiles` table
+3. After completing Preferences, user is redirected to main app
 
-### For Users
-1. Open the app
-2. Enter your phone number with country code (e.g., +1234567890)
-3. Check your phone for the SMS verification code
-4. Enter the 6-digit code
-5. You're now logged in!
+## Key Components
 
-### For Developers
+### AuthContext.tsx
+- Manages authentication state
+- Handles profile creation via `ensureProfileExists()`
+- Checks onboarding status via `checkOnboardingStatus()`
+- Provides auth methods: `signIn()`, `verifyCode()`, `signOut()`
 
-The authentication state is managed through the `AuthContext`:
+### App.tsx
+- Main routing logic based on `isAuthenticated` and `hasCompletedOnboarding`
+- Shows appropriate navigator based on user state
 
-```typescript
-import { useAuth } from '../authentication/AuthContext';
+### Database Schema
+The `profiles` table should have these columns:
+- `id` (UUID, primary key, matches auth.users.id)
+- `full_name` (text)
+- `year` (text)
+- `major` (text)
+- `instagram` (text, optional)
+- `profile_picture_uri` (text, optional)
+- `preferences` (jsonb, optional)
+- `created_at` (timestamp)
+- `updated_at` (timestamp)
 
-const { isAuthenticated, user, signOut } = useAuth();
-```
+## Security Features
+- Phone number verification required for all users
+- Automatic profile creation prevents unauthorized access
+- User ID from auth context used throughout app (no hardcoded IDs)
+- Proper error handling for authentication failures
 
-### Sign Out
-Users can sign out from the Account screen in the settings.
-
-## Configuration
-
-The app uses Supabase for authentication. Make sure your Supabase project has:
-- Phone authentication enabled
-- SMS provider configured (Twilio)
-- Proper phone number validation
-
-## Security
-
-- All authentication is handled by Supabase
-- SMS verification prevents unauthorized access
-- Session tokens are securely managed
-- No sensitive data is stored locally
+## Testing
+To test the flow:
+1. Enter a valid phone number
+2. Enter the verification code sent via SMS
+3. If new user: complete onboarding flow
+4. If returning user: should go directly to main app
