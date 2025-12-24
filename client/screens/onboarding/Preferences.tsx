@@ -5,6 +5,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/navigation.js';
 import PinkButton from '../../components/PinkButton';
 import CustomAlert from '../../components/CustomAlert';
+import { useAuth } from '../../authentication/AuthContext';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Preferences'>;
 
@@ -17,12 +18,18 @@ const PreferencesScreen: React.FC<Props> = ({ navigation }) => {
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
+  const { user, checkOnboardingStatus } = useAuth();
 
   const handleSubmit = async () => {
     setLoading(true);
 
     try {
-      const mockUserId = '12345678-1234-1234-1234-123456789abc';
+      if (!user?.id) {
+        setAlertTitle('Error');
+        setAlertMessage('User not authenticated');
+        setAlertVisible(true);
+        return;
+      }
 
       const preferences = {
         same_school: sameSchool,
@@ -34,7 +41,7 @@ const PreferencesScreen: React.FC<Props> = ({ navigation }) => {
       const { error } = await supabase
         .from('profiles')
         .update({ preferences })
-        .eq('id', mockUserId);
+        .eq('id', user.id);
 
       if (error) {
         setAlertTitle('Database error');
@@ -44,7 +51,15 @@ const PreferencesScreen: React.FC<Props> = ({ navigation }) => {
         setAlertTitle('Success');
         setAlertMessage('Preferences saved!');
         setAlertVisible(true);
-        navigation.navigate('MainTabs');
+        
+        // Update onboarding status
+        await checkOnboardingStatus();
+        
+        // Navigate to main app
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'MainTabs' as any }],
+        });
       }
     } catch (error) {
       console.log('Error:', error);

@@ -4,11 +4,13 @@ import { useNavigation } from "@react-navigation/native";
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { RideNowStackParamList } from '../../navigation/RideNowStackNavigator';
 import { supabase } from '../../supabase.js';
+import { useAuth } from '../../authentication/AuthContext';
 
 type Nav = StackNavigationProp<RideNowStackParamList, 'Home'>;
 
 export default function RideNowHomeScreen() {
     const navigation = useNavigation<Nav>();
+    const { user } = useAuth();
 
     const [selectedStartingPoint, setSelectedStartingPoint] = useState<string | null>(null);
     const [showStartingPointDropdown, setShowStartingPointDropdown] = useState(false);
@@ -30,12 +32,15 @@ export default function RideNowHomeScreen() {
       setShowStartingPointDropdown(false);
     };
 
-    const id = '12345678-1234-1234-1234-123456789abc' // jess
-
     const handleRideRequest = async () => {
+      if (!user?.id) {
+        console.error('User not authenticated');
+        return;
+      }
+
       const { data, error } = await supabase.from('ride_now_requests').insert([
           {
-            user_id: id, // rn using a uuid that already exists in the db (jess)
+            user_id: user.id,
             starting_point: selectedStartingPoint,
             destination: selectedDestination,
           }

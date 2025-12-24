@@ -4,6 +4,7 @@ import { supabase } from '../supabase.js';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 import PinkButton from './PinkButton';
+import { useAuth } from '../authentication/AuthContext';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -34,6 +35,7 @@ const OnboardingInput: React.FC<OnboardingInputProps> = ({
 }) => {
   const [value, setValue] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+  const { user } = useAuth();
 
   const handleNext = async () => {
     if (!isOptional && !value.trim()) {
@@ -41,15 +43,18 @@ const OnboardingInput: React.FC<OnboardingInputProps> = ({
       return;
     }
 
+    if (!user?.id) {
+      Alert.alert('Error', 'User not authenticated');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const mockUserId = '12345678-1234-1234-1234-123456789abc';
-
       const { error } = await supabase
         .from('profiles')
         .update({ [fieldName]: value.trim() })
-        .eq('id', mockUserId);
+        .eq('id', user.id);
 
       if (error) {
         Alert.alert('Database error', error.message);

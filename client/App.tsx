@@ -1,15 +1,38 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import TabNavigator from './navigation/TabNavigator';
-import 'react-native-get-random-values';
+import { AuthProvider, useAuth } from './authentication/AuthContext';
+import RootNavigator from './navigation/RootNavigator';
+import AuthNavigator from './navigation/AuthNavigator';
+import OnboardingNavigator from './navigation/OnboardingNavigator';
+import LoadingScreen from './components/LoadingScreen';
 
-const Stack = createStackNavigator();
+const AppContent = () => {
+  const { isAuthenticated, isLoading, hasCompletedOnboarding } = useAuth();
+
+  if (isLoading) {
+    return <LoadingScreen message="Checking authentication..." />;
+  }
+
+  return (
+    <NavigationContainer>
+      {isAuthenticated ? (
+        hasCompletedOnboarding ? (
+          <RootNavigator />
+        ) : (
+          <OnboardingNavigator />
+        )
+      ) : (
+        <AuthNavigator />
+      )}
+    </NavigationContainer>
+  );
+};
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <RootNavigator />
-    </NavigationContainer>
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
+

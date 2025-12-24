@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../supabase.js';
 import PinkButton from '../../components/PinkButton';
 import CustomAlert from '../../components/CustomAlert';
+import { useAuth } from '../../authentication/AuthContext';
 
 interface UserData {
   full_name?: string;
@@ -23,6 +24,7 @@ export default function AccountScreen() {
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
+  const { signOut, user } = useAuth();
   
   // Form state
   const [instagram, setInstagram] = useState('');
@@ -34,17 +36,22 @@ export default function AccountScreen() {
   });
 
   useEffect(() => {
-    fetchUserData();
-  }, []);
+    if (user?.id) {
+      fetchUserData();
+    }
+  }, [user?.id]);
 
   const fetchUserData = async () => {
     try {
-      const mockUserId = '12345678-1234-1234-1234-123456789abc';
+      if (!user?.id) {
+        console.log('No authenticated user found');
+        return;
+      }
       
       const { data, error } = await supabase
         .from('profiles')
         .select('full_name, instagram, preferences')
-        .eq('id', mockUserId)
+        .eq('id', user.id)
         .single();
 
       if (error) {
@@ -76,7 +83,12 @@ export default function AccountScreen() {
     setSaving(true);
 
     try {
-      const mockUserId = '12345678-1234-1234-1234-123456789abc';
+      if (!user?.id) {
+        setAlertTitle('Error');
+        setAlertMessage('User not authenticated');
+        setAlertVisible(true);
+        return;
+      }
 
       const { error } = await supabase
         .from('profiles')
@@ -84,7 +96,7 @@ export default function AccountScreen() {
           instagram: instagram.trim(),
           preferences 
         })
-        .eq('id', mockUserId);
+        .eq('id', user.id);
 
       if (error) {
         setAlertTitle('Database error');
@@ -116,6 +128,27 @@ export default function AccountScreen() {
       ...prev,
       [key]: value
     }));
+  };
+
+  const handleSignOut = async () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await signOut();
+            } catch (error) {
+              console.error('Error signing out:', error);
+            }
+          },
+        },
+      ]
+    );
   };
 
   if (loading) {
@@ -180,6 +213,16 @@ export default function AccountScreen() {
             onPress={handleSave} 
             disabled={saving} 
           />
+        </View>
+
+        {/* Sign Out Button */}
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.signOutButton}
+            onPress={handleSignOut}
+          >
+            <Text style={styles.signOutText}>Sign Out</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
       
@@ -265,5 +308,17 @@ const styles = StyleSheet.create({
   buttonContainer: {
     alignItems: 'center',
     marginTop: 20,
+  },
+  signOutButton: {
+    backgroundColor: '#ff4444',
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginTop: 10,
+  },
+  signOutText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
